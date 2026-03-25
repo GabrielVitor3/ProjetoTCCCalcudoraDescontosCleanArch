@@ -1,26 +1,21 @@
 package com.seuprojeto.marketplace.domain.model;
 
+import lombok.Getter;
+import lombok.Setter;
+
+import java.math.BigDecimal;
+
+@Getter
+@Setter
 public class CartSummary {
 
-    private final double total;
-    private final double discount;
-    private final double finalTotal;
+    private BigDecimal subtotal;
+    private BigDecimal discount;
+    private BigDecimal total;
 
-    public CartSummary(double total, double discount, double finalTotal) {
-        this.total = total;
+    public CartSummary(BigDecimal subtotal, BigDecimal discount) {
+        this.subtotal = subtotal;
         this.discount = discount;
-        this.finalTotal = finalTotal;
-    }
-
-    public double getTotal() {
-        return total;
-    }
-
-    public double getDiscount() {
-        return discount;
-    }
-
-    public double getFinalTotal() {
-        return finalTotal;
+        this.total = subtotal.subtract(discount);
     }
 }

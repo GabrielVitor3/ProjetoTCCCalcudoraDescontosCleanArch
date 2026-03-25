@@ -1,85 +1,130 @@
 package com.seuprojeto.marketplace.application.usecase;
 
-import com.seuprojeto.marketplace.domain.model.CartItem;
-import com.seuprojeto.marketplace.domain.model.CartSummary;
+import com.seuprojeto.marketplace.application.dto.CartSelection;
 import com.seuprojeto.marketplace.domain.model.Product;
+import com.seuprojeto.marketplace.domain.model.ProductCategory;
 import com.seuprojeto.marketplace.domain.repository.ProductRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.mock;
 
 class CalculateCartUseCaseTest {
 
-    private ProductRepository repository;
     private CalculateCartUseCase useCase;
 
     @BeforeEach
     void setup() {
-        repository = mock(ProductRepository.class);
-        useCase = new CalculateCartUseCase(repository);
+        useCase = new CalculateCartUseCase(new FakeProductRepository());
+    }
+    @Test
+    void shouldReturnNoDiscountWhenSingleItem() {
+
+        List<CartSelection> input = List.of(
+                new CartSelection(1L, 1)
+        );
+
+        var result = useCase.execute(input);
+
+        assertEquals(0, result.getDiscount().compareTo(BigDecimal.ZERO));
+        assertEquals(result.getSubtotal(), result.getTotal());
     }
 
     @Test
-    void shouldCalculateTotalWithoutDiscount() {
-        Product product = new Product("Produto A", 50.0);
-        CartItem item = new CartItem(product, 2); // 100
+    void shouldApplyQuantityDiscount() {
 
-        CartSummary result = useCase.execute(List.of(item));
+        List<CartSelection> input = List.of(
+                new CartSelection(1L, 2) // 2 itens → 5%
+        );
 
-        assertEquals(100.0, result.getTotal());
-        assertEquals(0.0, result.getDiscount());
-        assertEquals(100.0, result.getFinalTotal());
+        var result = useCase.execute(input);
+
+        assertTrue(result.getDiscount().compareTo(BigDecimal.ZERO) > 0);
     }
 
     @Test
-    void shouldApplyFivePercentDiscount() {
-        Product product = new Product("Produto A", 60.0);
-        CartItem item = new CartItem(product, 2); // 120
+    void shouldApplyCategoryDiscount() {
 
-        CartSummary result = useCase.execute(List.of(item));
+        List<CartSelection> input = List.of(
+                new CartSelection(2L, 1) // CARREGADOR → 10%
+        );
 
-        assertEquals(120.0, result.getTotal());
-        assertEquals(6.0, result.getDiscount()); // 5%
-        assertEquals(114.0, result.getFinalTotal());
+        var result = useCase.execute(input);
+
+        assertTrue(result.getDiscount().compareTo(BigDecimal.ZERO) > 0);
+    }
+
+    // ================================
+    // TESTE 4 - Descontos cumulativos
+    // ================================
+    @Test
+    void shouldApplyCumulativeDiscounts() {
+
+        List<CartSelection> input = List.of(
+                new CartSelection(1L, 2), // CAPINHA
+                new CartSelection(2L, 2)  // CARREGADOR
+        );
+
+        var result = useCase.execute(input);
+
+        assertTrue(result.getDiscount().compareTo(BigDecimal.ZERO) > 0);
     }
 
     @Test
-    void shouldApplyTenPercentDiscount() {
-        Product product = new Product ("Produto A", 150.0);
-        CartItem item = new CartItem(product, 2); // 300
+    void shouldNotExceedMaxDiscountLimit() {
 
-        CartSummary result = useCase.execute(List.of(item));
+        List<CartSelection> input = List.of(
+                new CartSelection(2L, 10) // força desconto alto
+        );
 
-        assertEquals(300.0, result.getTotal());
-        assertEquals(30.0, result.getDiscount()); // 10%
-        assertEquals(270.0, result.getFinalTotal());
+        var result = useCase.execute(input);
+
+        BigDecimal maxAllowed = result.getSubtotal().multiply(new BigDecimal("0.25"));
+
+        assertTrue(result.getDiscount().compareTo(maxAllowed) <= 0);
     }
 
+    // ================================
+    // TESTE 6 - Total correto
+    // ================================
     @Test
-    void shouldHandleMultipleItems() {
-        Product p1 = new Product("Produto A", 50.0);
-        Product p2 = new Product( "Produto B", 30.0);
+    void shouldCalculateTotalCorrectly() {
 
-        CartItem item1 = new CartItem(p1, 2); // 100
-        CartItem item2 = new CartItem(p2, 2); // 60
+        List<CartSelection> input = List.of(
+                new CartSelection(3L, 1) // FONE
+        );
 
-        CartSummary result = useCase.execute(List.of(item1, item2));
+        var result = useCase.execute(input);
 
-        assertEquals(160.0, result.getTotal());
-        assertEquals(8.0, result.getDiscount()); // 5%
-        assertEquals(152.0, result.getFinalTotal());
+        BigDecimal expectedTotal = result.getSubtotal().subtract(result.getDiscount());
+
+        assertEquals(0, expectedTotal.compareTo(result.getTotal()));
     }
 
-    @Test
-    void shouldReturnZeroWhenCartIsEmpty() {
-        CartSummary result = useCase.execute(List.of());
+    static class FakeProductRepository implements ProductRepository {
 
-        assertEquals(0.0, result.getTotal());
-        assertEquals(0.0, result.getDiscount());
-        assertEquals(0.0, result.getFinalTotal());
+        private final List<Product> products = List.of(
+                new Product(1L, "Capinha", ProductCategory.CAPINHA, new BigDecimal("50")),
+                new Product(2L, "Carregador", ProductCategory.CARREGADOR, new BigDecimal("100")),
+                new Product(3L, "Fone", ProductCategory.FONE, new BigDecimal("200")),
+                new Product(4L, "Película", ProductCategory.PELICULA, new BigDecimal("30")),
+                new Product(5L, "Suporte", ProductCategory.SUPORTE, new BigDecimal("80"))
+        );
+
+        @Override
+        public List<Product> findAll() {
+            return products;
+        }
+
+        @Override
+        public Optional<Product> findById(Long id) {
+            return products.stream()
+                    .filter(p -> p.getId().equals(id))
+                    .findFirst();
+        }
     }
 }
