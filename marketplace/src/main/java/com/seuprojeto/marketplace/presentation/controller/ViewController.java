@@ -1,6 +1,6 @@
 package com.seuprojeto.marketplace.presentation.controller;
 
-import com.seuprojeto.marketplace.domain.repository.ProductRepository;
+import com.seuprojeto.marketplace.domain.repository.ProdutoRepositorio;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -8,9 +8,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Controller
 public class ViewController {
 
-    private final ProductRepository repository;
+    private final ProdutoRepositorio repository;
 
-    public ViewController(ProductRepository repository) {
+    public ViewController(ProdutoRepositorio repository) {
         this.repository = repository;
     }
 

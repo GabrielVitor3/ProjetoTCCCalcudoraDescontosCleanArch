@@ -1,6 +1,6 @@
 package com.seuprojeto.marketplace.domain.model;
 
-public enum ProductCategory {
+public enum CategoriaProduto {
     CAPINHA,
     CARREGADOR,
     FONE,
