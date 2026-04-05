@@ -19,12 +19,12 @@
         </thead>
         <tbody>
         <tr th:each="product : ${products}">
-            <td th:text="${product.name}"></td>
-            <td th:text="${product.category}"></td>
-            <td th:text="${product.price}"></td>
+            <td th:text="${product.getNome()}"></td>
+            <td th:text="${product.getCategoriaProduto()}"></td>
+            <td th:text="${product.getPreco()}"></td>
             <td>
                 <input type="number" min="0"
-                       th:attr="data-id=${product.id}"
+                       th:attr="data-id=${product.getId()}"
                        class="quantity"/>
             </td>
         </tr>

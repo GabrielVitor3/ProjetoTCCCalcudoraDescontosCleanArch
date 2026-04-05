@@ -15,7 +15,7 @@ public class CalcularCarrinhoUseCase {
         this.produtoRepositorio = produtoRepositorio;
     }
 
-    public ResumoCarrinho execute(List<SelecaoCarrinho> selecaoCarrinhos) {
+    public ResumoCarrinho executar(List<SelecaoCarrinho> selecaoCarrinhos) {
         return new ResumoCarrinho(
                 new BigDecimal("100"),
                 new BigDecimal("10")

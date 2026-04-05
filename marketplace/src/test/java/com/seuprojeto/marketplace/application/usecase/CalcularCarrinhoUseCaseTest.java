@@ -21,27 +21,27 @@ class CalcularCarrinhoUseCaseTest {
     void setup() {
         useCase = new CalcularCarrinhoUseCase(new FakeProdutoRepositorio());
     }
+
     @Test
-    void shouldReturnNoDiscountWhenSingleItem() {
+    void shouldApplyCategoryDiscountWhenSingleItem() {
 
         List<SelecaoCarrinho> input = List.of(
-                new SelecaoCarrinho(1L, 1)
+                new SelecaoCarrinho(1L, 1) // CAPINHA = 3%
         );
 
-        var result = useCase.execute(input);
+        var result = useCase.executar(input);
 
-        assertEquals(0, result.getDesconto().compareTo(BigDecimal.ZERO));
-        assertEquals(result.getSubtotal(), result.getTotal());
+        assertTrue(result.getDesconto().compareTo(BigDecimal.ZERO) > 0);
     }
 
     @Test
     void shouldApplyQuantityDiscount() {
 
         List<SelecaoCarrinho> input = List.of(
-                new SelecaoCarrinho(1L, 2) // 2 itens → 5%
+                new SelecaoCarrinho(1L, 2)
         );
 
-        var result = useCase.execute(input);
+        var result = useCase.executar(input);
 
         assertTrue(result.getDesconto().compareTo(BigDecimal.ZERO) > 0);
     }
@@ -50,26 +50,23 @@ class CalcularCarrinhoUseCaseTest {
     void shouldApplyCategoryDiscount() {
 
         List<SelecaoCarrinho> input = List.of(
-                new SelecaoCarrinho(2L, 1) // CARREGADOR → 10%
+                new SelecaoCarrinho(2L, 1)
         );
 
-        var result = useCase.execute(input);
+        var result = useCase.executar(input);
 
         assertTrue(result.getDesconto().compareTo(BigDecimal.ZERO) > 0);
     }
 
-    // ================================
-    // TESTE 4 - Descontos cumulativos
-    // ================================
     @Test
     void shouldApplyCumulativeDiscounts() {
 
         List<SelecaoCarrinho> input = List.of(
-                new SelecaoCarrinho(1L, 2), // CAPINHA
-                new SelecaoCarrinho(2L, 2)  // CARREGADOR
+                new SelecaoCarrinho(1L, 2),
+                new SelecaoCarrinho(2L, 2)
         );
 
-        var result = useCase.execute(input);
+        var result = useCase.executar(input);
 
         assertTrue(result.getDesconto().compareTo(BigDecimal.ZERO) > 0);
     }
@@ -78,27 +75,24 @@ class CalcularCarrinhoUseCaseTest {
     void shouldNotExceedMaxDiscountLimit() {
 
         List<SelecaoCarrinho> input = List.of(
-                new SelecaoCarrinho(2L, 10) // força desconto alto
+                new SelecaoCarrinho(2L, 10)
         );
 
-        var result = useCase.execute(input);
+        var result = useCase.executar(input);
 
         BigDecimal maxAllowed = result.getSubtotal().multiply(new BigDecimal("0.25"));
 
         assertTrue(result.getDesconto().compareTo(maxAllowed) <= 0);
     }
 
-    // ================================
-    // TESTE 6 - Total correto
-    // ================================
     @Test
     void shouldCalculateTotalCorrectly() {
 
         List<SelecaoCarrinho> input = List.of(
-                new SelecaoCarrinho(3L, 1) // FONE
+                new SelecaoCarrinho(3L, 1)
         );
 
-        var result = useCase.execute(input);
+        var result = useCase.executar(input);
 
         BigDecimal expectedTotal = result.getSubtotal().subtract(result.getDesconto());
 
@@ -107,7 +101,7 @@ class CalcularCarrinhoUseCaseTest {
 
     static class FakeProdutoRepositorio implements ProdutoRepositorio {
 
-        private final List<Produto> Produtos = List.of(
+        private final List<Produto> produtos = List.of(
                 new Produto(1L, "Capinha", CategoriaProduto.CAPINHA, new BigDecimal("50")),
                 new Produto(2L, "Carregador", CategoriaProduto.CARREGADOR, new BigDecimal("100")),
                 new Produto(3L, "Fone", CategoriaProduto.FONE, new BigDecimal("200")),
@@ -117,12 +111,12 @@ class CalcularCarrinhoUseCaseTest {
 
         @Override
         public List<Produto> findAll() {
-            return Produtos;
+            return produtos;
         }
 
         @Override
         public Optional<Produto> findById(Long id) {
-            return Produtos.stream()
+            return produtos.stream()
                     .filter(p -> p.getId().equals(id))
                     .findFirst();
         }

@@ -2,32 +2,49 @@ document.getElementById("cart-form").addEventListener("submit", function (e) {
     e.preventDefault();
 
     const inputs = document.querySelectorAll(".quantity");
-
-    const selections = [];
+    const selecoes = [];
 
     inputs.forEach(input => {
-        const quantity = parseInt(input.value);
+        const valor = input.value.trim();
 
-        if (quantity && quantity > 0) {
-            selections.push({
-                productId: parseInt(input.getAttribute("data-id")),
-                quantity: quantity
-            });
+        if (valor !== "") {
+            const quantidade = parseInt(valor);
+
+            if (!isNaN(quantidade) && quantidade > 0) {
+                selecoes.push({
+                    idProduto: parseInt(input.getAttribute("data-id")),
+                    quantidade: quantidade
+                });
+            }
         }
     });
+
+    console.log("Enviando:", JSON.stringify(selecoes, null, 2));
 
     fetch("/cart", {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify(selections)
+        body: JSON.stringify(selecoes)
     })
-        .then(response => response.json())
-        .then(data => {
-            document.getElementById("subtotal").innerText = data.subtotal;
-            document.getElementById("discount").innerText = data.discount;
-            document.getElementById("total").innerText = data.total;
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("Erro na requisição: " + response.status);
+            }
+            return response.json();
         })
-        .catch(error => console.error("Erro:", error));
+        .then(data => {
+            console.log("Resposta da API:", data);
+
+            document.getElementById("subtotal").innerText = data.subtotal ?? "0";
+            document.getElementById("discount").innerText = data.desconto ?? "0";
+            document.getElementById("total").innerText = data.total ?? "0";
+        })
+        .catch(error => {
+            console.error("Erro:", error);
+            document.getElementById("subtotal").innerText = "Erro";
+            document.getElementById("discount").innerText = "Erro";
+            document.getElementById("total").innerText = "Erro";
+        });
 });

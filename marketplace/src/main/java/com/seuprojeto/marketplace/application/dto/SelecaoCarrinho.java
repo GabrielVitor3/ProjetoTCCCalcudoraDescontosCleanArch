@@ -1,15 +1,23 @@
 package com.seuprojeto.marketplace.application.dto;
 
-import lombok.Getter;
-
-@Getter
 public class SelecaoCarrinho {
 
     private Long idProduto;
-    private int quantidade;
+    private Integer quantidade;
 
-    public SelecaoCarrinho(Long idProduto, int quantidade) {
+    public SelecaoCarrinho() {
+    }
+
+    public SelecaoCarrinho(Long idProduto, Integer quantidade) {
         this.idProduto = idProduto;
         this.quantidade = quantidade;
+    }
+
+    public Long getIdProduto() {
+        return idProduto;
+    }
+
+    public Integer getQuantidade() {
+        return quantidade;
     }
 }

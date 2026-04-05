@@ -21,6 +21,6 @@ public class CarrinhoController {
 
     @PostMapping
     public ResumoCarrinho calculate(@RequestBody List<SelecaoCarrinho> selections) {
-        return useCase.execute(selections);
+        return useCase.executar(selections);
     }
 }
