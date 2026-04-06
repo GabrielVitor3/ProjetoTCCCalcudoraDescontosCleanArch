@@ -24,14 +24,15 @@ class CalcularCarrinhoUseCaseTest {
 
     @Test
     void shouldApplyCategoryDiscountWhenSingleItem() {
-
         List<SelecaoCarrinho> input = List.of(
-                new SelecaoCarrinho(1L, 1) // CAPINHA = 3%
+                new SelecaoCarrinho(1L, 1)
         );
 
         var result = useCase.executar(input);
 
-        assertTrue(result.getDesconto().compareTo(BigDecimal.ZERO) > 0);
+        assertEquals(0, result.getSubtotal().compareTo(new BigDecimal("50")));
+        assertEquals(0, result.getDesconto().compareTo(new BigDecimal("1.50")));
+        assertEquals(0, result.getTotal().compareTo(new BigDecimal("48.50")));
     }
 
     @Test
